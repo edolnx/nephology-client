@@ -61,4 +61,15 @@ while ($work_to_do == 1) {
     sleep 10;
 }
 
+sub _check_dmidecode {
+	my $ohai = `ohai`;
+	my $json = JSON->new->utf8;
+
+	my $href = $json->decode($ohai);
+
+	my $result = $href->{'dmi'}->{'system'}->{'product_name'};
+	chomp($result);
+	return $result;
+}
+
 exit;
