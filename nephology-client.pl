@@ -6,7 +6,7 @@ use Getopt::Long;
 use JSON;
 use Try::Tiny;
 
-my $version = 1;
+my $version = 2;
 my $work_to_do = 1;
 my ($neph_server, $mac_addr) = undef;
 
@@ -26,7 +26,7 @@ while ($work_to_do == 1) {
     print "Getting worklist from $neph_server for $mac_addr\n";
     # Grab the worklist from the Nepology Server
     my $Response = $Browser->get(
-        "http://" . $neph_server . "/nephology/install/" . $mac_addr,
+        "http://" . $neph_server . ":3000/install/" . $mac_addr,
         'X-Nephology-Client-Version' => $version,
 	);
 
