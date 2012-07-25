@@ -2,6 +2,7 @@
 
 use strict;
 use LWP;
+use LWP::Simple;
 use Getopt::Long;
 use JSON;
 use Try::Tiny;
@@ -54,11 +55,25 @@ while ($work_to_do == 1) {
     }
 
     for my $reqhash (@{$nephology_commands->{'runlist'}}) {
-        print "Got command: " . JSON->new->utf8->encode($reqhash) . "\n";
+        print "Got command: " . $reqhash->{'description'} . "\n";
+	
+	my $filename = "/tmp/deploy-" . $reqhash->{'id'};
+	my $url = "http://$neph_server:3000/install/$mac_addr/" . $reqhash->{'id'};
+
+	if(-e $filename) {
+		system("rm $filename");
+	} 
+	
+	open(FILE, "+>", $filename);
+	chmod 0755, $filename;
+	my $output = get ($url);
+	print FILE $output;
+
+	system("bash $filename");
     }
 
-    print "End of run. Waiting 10 seconds before continuing.\n";
-    sleep 10;
+    print "End of run. Its time for us to reboot into our machine.\n";
+    exit;
 }
 
 sub _check_dmidecode {
