@@ -27,7 +27,7 @@ while ($work_to_do == 1) {
     print "Getting worklist from $neph_server for $mac_addr\n";
     # Grab the worklist from the Nepology Server
     my $Response = $Browser->get(
-        "http://" . $neph_server . ":3000/install/" . $mac_addr,
+        "http://" . $neph_server . "/install/" . $mac_addr,
         'X-Nephology-Client-Version' => $version,
 	);
 
@@ -58,7 +58,7 @@ while ($work_to_do == 1) {
         print "Got command: " . $reqhash->{'description'} . "\n";
 	
 	my $filename = "/tmp/deploy-" . $reqhash->{'id'};
-	my $url = "http://$neph_server:3000/install/$mac_addr/" . $reqhash->{'id'};
+	my $url = "http://$neph_server/install/$mac_addr/" . $reqhash->{'id'};
 
 	if(-e $filename) {
 		system("rm $filename");
@@ -72,8 +72,8 @@ while ($work_to_do == 1) {
 	system("bash $filename");
     }
 
-    print "End of run. Its time for us to reboot into our machine.\n";
-    exit;
+    print "End of run. Waiting for 10 seconds before continuing.\n";
+    sleep 10;
 }
 
 sub _check_dmidecode {
