@@ -2,11 +2,12 @@
 
 use strict;
 use LWP;
+use LWP::Simple;
 use Getopt::Long;
 use JSON;
 use Try::Tiny;
 
-my $version = 1;
+my $version = 2;
 my $work_to_do = 1;
 my ($neph_server, $mac_addr) = undef;
 
@@ -26,14 +27,23 @@ while ($work_to_do == 1) {
     print "Getting worklist from $neph_server for $mac_addr\n";
     # Grab the worklist from the Nepology Server
     my $Response = $Browser->get(
-        "http://" . $neph_server . "/nephology/install/" . $mac_addr,
+        "http://" . $neph_server . "/install/" . $mac_addr,
         'X-Nephology-Client-Version' => $version,
 	);
 
     unless ($Response->is_success) {
-        print "No successful response, waiting for 5min before trying again\n";
-        sleep 300;
-        next;
+        if($Response->status_line =~ /^404/) {
+                my $ohai = `ohai`;
+                $Response = $Browser->post(
+                        "http://" . $neph_server . "/install/" . $mac_addr,
+                        'Content-Type' => 'application/json; charset=utf-8',
+                        'Content' => $ohai,
+                );
+        } else {
+                print "No successful response, waiting for 5min before trying again\n";
+                sleep 300;
+                next;
+        }
     }
 
     print "Got a response, processing...\n";
@@ -54,10 +64,24 @@ while ($work_to_do == 1) {
     }
 
     for my $reqhash (@{$nephology_commands->{'runlist'}}) {
-        print "Got command: " . JSON->new->utf8->encode($reqhash) . "\n";
+        print "Got command: " . $reqhash->{'description'} . "\n";
+	
+	my $filename = "/tmp/deploy-" . $reqhash->{'id'};
+	my $url = "http://$neph_server/install/$mac_addr/" . $reqhash->{'id'};
+
+	if(-e $filename) {
+		system("rm $filename");
+	} 
+	
+	open(FILE, "+>", $filename);
+	chmod 0755, $filename;
+	my $output = get ($url);
+	print FILE $output;
+
+	system("bash $filename");
     }
 
-    print "End of run. Waiting 10 seconds before continuing.\n";
+    print "End of run. Waiting for 10 seconds before continuing.\n";
     sleep 10;
 }
 
