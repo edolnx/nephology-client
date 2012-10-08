@@ -32,9 +32,18 @@ while ($work_to_do == 1) {
 	);
 
     unless ($Response->is_success) {
-        print "No successful response, waiting for 5min before trying again\n";
-        sleep 300;
-        next;
+        if($Response->status_line =~ /^404/) {
+                my $ohai = `ohai`;
+                $Response = $Browser->post(
+                        "http://" . $neph_server . "/install/" . $mac_addr,
+                        'Content-Type' => 'application/json; charset=utf-8',
+                        'Content' => $ohai,
+                );
+        } else {
+                print "No successful response, waiting for 5min before trying again\n";
+                sleep 300;
+                next;
+        }
     }
 
     print "Got a response, processing...\n";
